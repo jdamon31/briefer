@@ -85,13 +85,13 @@ export default function CalendarPage() {
 
         {/* Week navigation */}
         <div className="flex items-center gap-2 mb-3">
-          <button onClick={() => setWeekStart(d => addDays(d, -7))} className="p-1 text-zinc-500 hover:text-zinc-100 transition-colors">
+          <button onClick={() => setWeekStart(d => addDays(d, -7))} className="p-1 text-zinc-400 hover:text-zinc-100 transition-colors">
             <ChevronLeft size={16} />
           </button>
-          <span className="text-xs text-zinc-500 flex-1 text-center">
+          <span className="text-xs text-zinc-400 flex-1 text-center">
             {format(weekStart, 'MMM d')} – {format(addDays(weekStart, 6), 'MMM d, yyyy')}
           </span>
-          <button onClick={() => setWeekStart(d => addDays(d, 7))} className="p-1 text-zinc-500 hover:text-zinc-100 transition-colors">
+          <button onClick={() => setWeekStart(d => addDays(d, 7))} className="p-1 text-zinc-400 hover:text-zinc-100 transition-colors">
             <ChevronRight size={16} />
           </button>
         </div>
@@ -123,11 +123,11 @@ export default function CalendarPage() {
 
         {/* Items for selected day */}
         <div>
-          <p className="text-[11px] font-medium text-zinc-500 uppercase tracking-widest mb-3">
+          <p className="text-[11px] font-medium text-zinc-400 uppercase tracking-widest mb-3">
             {format(selectedDate, 'EEEE, MMMM d')}
           </p>
           {dayItems.length === 0 ? (
-            <div className="text-center py-12 text-zinc-600">
+            <div className="text-center py-12 text-zinc-400">
               <p className="text-sm">Nothing scheduled.</p>
             </div>
           ) : (

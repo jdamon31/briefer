@@ -1,10 +1,9 @@
 'use client'
 import { useState } from 'react'
 import { format, isToday, isTomorrow, isPast } from 'date-fns'
-import { CheckCircle2, Circle, HelpCircle, Calendar, Tag } from 'lucide-react'
+import { CheckCircle2, Circle, HelpCircle, Calendar } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { Item, ItemTag, ALL_TAGS, TAG_COLORS } from '@/types'
-import { Badge } from '@/components/ui/badge'
+import { Item, TAG_COLORS } from '@/types'
 
 interface ItemCardProps {
   item: Item
@@ -39,14 +38,16 @@ export function ItemCard({ item, processing, onComplete, onUpdate, onDelete }: I
 
   return (
     <div className={cn(
-      'group flex items-start gap-3 px-4 py-3 rounded-xl border transition-all',
-      isDone ? 'opacity-50 border-zinc-800/50 bg-zinc-900/30' : 'border-zinc-800 bg-zinc-900/60',
+      'group flex items-start gap-3 px-4 py-3.5 rounded-xl border transition-all',
+      isDone
+        ? 'opacity-50 border-zinc-700 bg-zinc-800/40'
+        : 'border-zinc-700 bg-zinc-800 hover:border-zinc-600 hover:bg-zinc-800',
       processing && 'animate-pulse'
     )}>
       {/* Checkbox */}
       <button
         onClick={() => onComplete(item.id)}
-        className="mt-0.5 flex-shrink-0 text-zinc-500 hover:text-zinc-100 transition-colors"
+        className="mt-0.5 flex-shrink-0 text-zinc-500 hover:text-zinc-200 transition-colors"
       >
         {isDone
           ? <CheckCircle2 size={18} className="text-zinc-400" />
@@ -63,7 +64,7 @@ export function ItemCard({ item, processing, onComplete, onUpdate, onDelete }: I
             onChange={e => setTitleDraft(e.target.value)}
             onBlur={commitTitle}
             onKeyDown={e => e.key === 'Enter' && commitTitle()}
-            className="w-full bg-transparent text-sm text-zinc-100 outline-none border-b border-zinc-600 pb-0.5"
+            className="w-full bg-transparent text-sm text-zinc-100 outline-none border-b border-zinc-500 pb-0.5"
           />
         ) : (
           <p
@@ -80,32 +81,30 @@ export function ItemCard({ item, processing, onComplete, onUpdate, onDelete }: I
 
         {/* Chips row */}
         {!processing && (
-          <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+          <div className="flex flex-wrap items-center gap-1.5 mt-2">
             {item.due_at && (
-              <button
-                className={cn(
-                  'text-[10px] font-medium px-2 py-0.5 rounded-full border transition-colors',
-                  isOverdue
-                    ? 'bg-red-500/10 text-red-400 border-red-500/20'
-                    : 'bg-zinc-800 text-zinc-400 border-zinc-700 hover:border-zinc-500'
-                )}
-              >
+              <span className={cn(
+                'text-[10px] font-semibold px-2 py-0.5 rounded-full border',
+                isOverdue
+                  ? 'bg-red-500/15 text-red-300 border-red-500/30'
+                  : 'bg-zinc-700 text-zinc-300 border-zinc-600'
+              )}>
                 {formatDueAt(item.due_at)}
-              </button>
+              </span>
             )}
 
             <button
               onClick={() => onUpdate(item.id, { type: item.type === 'task' ? 'event' : 'task' })}
-              className="text-[10px] font-medium px-2 py-0.5 rounded-full border bg-zinc-800 text-zinc-400 border-zinc-700 hover:border-zinc-500 transition-colors"
+              className="text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-zinc-700 text-zinc-300 border-zinc-600 hover:border-zinc-400 hover:text-zinc-100 transition-colors"
             >
               {item.type === 'event' ? <Calendar size={10} className="inline mr-1" /> : null}
               {item.type}
-              {item.needs_review && <HelpCircle size={10} className="inline ml-1 text-amber-400" />}
+              {item.needs_review && <HelpCircle size={10} className="inline ml-1 text-amber-300" />}
             </button>
 
             {item.tags[0] && (
               <span className={cn(
-                'text-[10px] font-medium px-2 py-0.5 rounded-full border',
+                'text-[10px] font-semibold px-2 py-0.5 rounded-full border',
                 TAG_COLORS[item.tags[0]]
               )}>
                 {item.tags[0]}
@@ -115,7 +114,7 @@ export function ItemCard({ item, processing, onComplete, onUpdate, onDelete }: I
         )}
 
         {processing && (
-          <p className="text-[10px] text-zinc-600 mt-1">Processing…</p>
+          <p className="text-[10px] text-zinc-500 mt-1">Processing…</p>
         )}
       </div>
     </div>

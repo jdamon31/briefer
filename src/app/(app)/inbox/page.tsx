@@ -70,7 +70,7 @@ export default function InboxPage() {
       <main className="px-4 pt-12 pb-4">
         <div className="mb-6">
           <h1 className="text-2xl font-semibold">Inbox</h1>
-          <p className="text-sm text-zinc-500 mt-0.5">
+          <p className="text-sm text-zinc-300 mt-0.5">
             {items.length === 0 ? 'Empty' : `${items.length} item${items.length !== 1 ? 's' : ''} without a date`}
           </p>
         </div>
@@ -86,12 +86,12 @@ export default function InboxPage() {
 
         {loading && (
           <div className="space-y-2">
-            {[1,2,3].map(i => <div key={i} className="h-16 rounded-xl bg-zinc-900/60 border border-zinc-800 animate-pulse" />)}
+            {[1,2,3].map(i => <div key={i} className="h-16 rounded-xl bg-zinc-800 border border-zinc-700 animate-pulse" />)}
           </div>
         )}
 
         {!loading && items.length === 0 && (
-          <div className="text-center py-16 text-zinc-600">
+          <div className="text-center py-16 text-zinc-400">
             <p className="text-sm">Inbox zero.</p>
             <p className="text-xs mt-1">Everything has a date.</p>
           </div>

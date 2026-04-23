@@ -22,7 +22,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className="dark">
-      <body className={`${geist.className} bg-zinc-950 text-zinc-100 antialiased`}>
+      <body className={`${geist.className} bg-zinc-900 text-zinc-100 antialiased`}>
         {children}
         <Toaster theme="dark" position="bottom-center" />
       </body>

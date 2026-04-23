@@ -108,7 +108,7 @@ export default function TodayPage() {
 
         {loading && (
           <div className="space-y-2">
-            {[1,2,3].map(i => <div key={i} className="h-16 rounded-xl bg-zinc-900/60 border border-zinc-800 animate-pulse" />)}
+            {[1,2,3].map(i => <div key={i} className="h-16 rounded-xl bg-zinc-800 border border-zinc-700 animate-pulse" />)}
           </div>
         )}
 
@@ -128,7 +128,7 @@ export default function TodayPage() {
 
             {today.length > 0 && (
               <section>
-                {overdue.length > 0 && <p className="text-[11px] font-medium text-zinc-500 uppercase tracking-widest mb-2">Up next</p>}
+                {overdue.length > 0 && <p className="text-[11px] font-medium text-zinc-400 uppercase tracking-widest mb-2">Up next</p>}
                 <div className="space-y-2">
                   {today.map(item => (
                     <ItemCard key={item.id} item={item} processing={processingIds.has(item.id)}
@@ -140,7 +140,7 @@ export default function TodayPage() {
 
             {done.length > 0 && (
               <section>
-                <p className="text-[11px] font-medium text-zinc-600 uppercase tracking-widest mb-2">Done</p>
+                <p className="text-[11px] font-medium text-zinc-400 uppercase tracking-widest mb-2">Done</p>
                 <div className="space-y-2">
                   {done.map(item => (
                     <ItemCard key={item.id} item={item} processing={false}
@@ -151,7 +151,7 @@ export default function TodayPage() {
             )}
 
             {!loading && items.length === 0 && (
-              <div className="text-center py-16 text-zinc-600">
+              <div className="text-center py-16 text-zinc-400">
                 <p className="text-sm">Nothing on the list.</p>
                 <p className="text-xs mt-1">Capture something below.</p>
               </div>

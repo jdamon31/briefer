@@ -39,11 +39,11 @@ export function CaptureBar({ onCapture }: CaptureBarProps) {
   }
 
   return (
-    <div className="fixed bottom-[57px] inset-x-0 px-3 pb-2 bg-gradient-to-t from-zinc-950 via-zinc-950/95 to-transparent pt-6">
-      <div className="flex gap-2 items-center bg-zinc-900 border border-zinc-800 rounded-2xl px-4 py-2.5 shadow-xl">
+    <div className="fixed bottom-[57px] inset-x-0 px-3 pb-2 pt-6 bg-gradient-to-t from-zinc-900 via-zinc-900/95 to-transparent">
+      <div className="flex gap-2 items-center bg-zinc-800 border border-zinc-600 rounded-2xl px-4 py-3 shadow-xl shadow-black/40">
         <button
           onClick={() => submit(true)}
-          className="text-zinc-500 hover:text-zinc-300 transition-colors flex-shrink-0"
+          className="text-zinc-400 hover:text-zinc-100 transition-colors flex-shrink-0"
           title="Add manually (no AI)"
         >
           <Plus size={18} />
@@ -54,7 +54,7 @@ export function CaptureBar({ onCapture }: CaptureBarProps) {
           onChange={e => setValue(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && submit()}
           placeholder={placeholder}
-          className="flex-1 bg-transparent text-sm text-zinc-100 placeholder:text-zinc-600 outline-none"
+          className="flex-1 bg-transparent text-sm text-zinc-100 placeholder:text-zinc-500 outline-none"
           disabled={submitting}
         />
         <button
@@ -63,8 +63,8 @@ export function CaptureBar({ onCapture }: CaptureBarProps) {
           className={cn(
             'flex-shrink-0 rounded-full p-1.5 transition-all',
             value.trim() && !submitting
-              ? 'bg-zinc-100 text-zinc-900 hover:bg-white'
-              : 'bg-zinc-800 text-zinc-600 cursor-not-allowed'
+              ? 'bg-white text-zinc-900 hover:bg-zinc-100'
+              : 'bg-zinc-700 text-zinc-500 cursor-not-allowed'
           )}
         >
           <ArrowUp size={16} strokeWidth={2.5} />

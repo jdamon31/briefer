@@ -18,11 +18,11 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-6 bg-zinc-950">
+    <div className="min-h-screen flex flex-col items-center justify-center px-6 bg-zinc-900">
       <div className="w-full max-w-sm text-center">
         <div className="mb-8">
           <h1 className="text-4xl font-bold tracking-tight text-zinc-100">Briefer</h1>
-          <p className="mt-2 text-zinc-500 text-sm">Think it, say it, done.</p>
+          <p className="mt-2 text-zinc-400 text-sm">Think it, say it, done.</p>
         </div>
 
         <button
@@ -39,7 +39,7 @@ export default function AuthPage() {
           {loading ? 'Signing in…' : 'Sign in with Google'}
         </button>
 
-        <p className="mt-6 text-xs text-zinc-600">
+        <p className="mt-6 text-xs text-zinc-500">
           Calendar sync is optional and requested separately.
         </p>
       </div>

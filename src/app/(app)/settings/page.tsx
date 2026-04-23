@@ -40,7 +40,7 @@ export default function SettingsPage() {
   }
 
   if (!settings || !user) {
-    return <div className="px-4 pt-12"><div className="space-y-4">{[1,2,3,4].map(i => <div key={i} className="h-16 rounded-xl bg-zinc-900/60 border border-zinc-800 animate-pulse" />)}</div></div>
+    return <div className="px-4 pt-12"><div className="space-y-4">{[1,2,3,4].map(i => <div key={i} className="h-16 rounded-xl bg-zinc-800 border border-zinc-700 animate-pulse" />)}</div></div>
   }
 
   return (
@@ -49,9 +49,9 @@ export default function SettingsPage() {
 
       {/* Profile */}
       <section className="mb-6">
-        <p className="text-[11px] font-medium text-zinc-500 uppercase tracking-widest mb-3">Profile</p>
+        <p className="text-[11px] font-medium text-zinc-400 uppercase tracking-widest mb-3">Profile</p>
         <div className="space-y-3">
-          <div className="flex items-center justify-between p-3 rounded-xl border border-zinc-800 bg-zinc-900/60">
+          <div className="flex items-center justify-between p-3 rounded-xl border border-zinc-700 bg-zinc-800">
             <span className="text-sm text-zinc-400">Name</span>
             <input
               defaultValue={user.display_name || ''}
@@ -59,7 +59,7 @@ export default function SettingsPage() {
               className="text-sm text-right bg-transparent text-zinc-100 outline-none w-40"
             />
           </div>
-          <div className="flex items-center justify-between p-3 rounded-xl border border-zinc-800 bg-zinc-900/60">
+          <div className="flex items-center justify-between p-3 rounded-xl border border-zinc-700 bg-zinc-800">
             <span className="text-sm text-zinc-400">Timezone</span>
             <span className="text-sm text-zinc-400">{user.timezone}</span>
           </div>
@@ -68,9 +68,9 @@ export default function SettingsPage() {
 
       {/* Morning Brief */}
       <section className="mb-6">
-        <p className="text-[11px] font-medium text-zinc-500 uppercase tracking-widest mb-3">Morning Brief</p>
+        <p className="text-[11px] font-medium text-zinc-400 uppercase tracking-widest mb-3">Morning Brief</p>
         <div className="space-y-3">
-          <div className="flex items-center justify-between p-3 rounded-xl border border-zinc-800 bg-zinc-900/60">
+          <div className="flex items-center justify-between p-3 rounded-xl border border-zinc-700 bg-zinc-800">
             <span className="text-sm text-zinc-100">Enable morning brief</span>
             <Switch
               checked={settings.morning_brief_enabled}
@@ -81,7 +81,7 @@ export default function SettingsPage() {
             />
           </div>
           {settings.morning_brief_enabled && (
-            <div className="flex items-center justify-between p-3 rounded-xl border border-zinc-800 bg-zinc-900/60">
+            <div className="flex items-center justify-between p-3 rounded-xl border border-zinc-700 bg-zinc-800">
               <span className="text-sm text-zinc-400">Send time</span>
               <input
                 type="time"
@@ -96,9 +96,9 @@ export default function SettingsPage() {
 
       {/* Reminders */}
       <section className="mb-6">
-        <p className="text-[11px] font-medium text-zinc-500 uppercase tracking-widest mb-3">Reminders</p>
+        <p className="text-[11px] font-medium text-zinc-400 uppercase tracking-widest mb-3">Reminders</p>
         <div className="space-y-3">
-          <div className="flex items-center justify-between p-3 rounded-xl border border-zinc-800 bg-zinc-900/60">
+          <div className="flex items-center justify-between p-3 rounded-xl border border-zinc-700 bg-zinc-800">
             <span className="text-sm text-zinc-100">Enable reminders</span>
             <Switch
               checked={settings.reminders_enabled}
@@ -113,8 +113,8 @@ export default function SettingsPage() {
 
       {/* Google Calendar */}
       <section className="mb-6">
-        <p className="text-[11px] font-medium text-zinc-500 uppercase tracking-widest mb-3">Google Calendar</p>
-        <div className="p-3 rounded-xl border border-zinc-800 bg-zinc-900/60">
+        <p className="text-[11px] font-medium text-zinc-400 uppercase tracking-widest mb-3">Google Calendar</p>
+        <div className="p-3 rounded-xl border border-zinc-700 bg-zinc-800">
           {integration ? (
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -143,12 +143,12 @@ export default function SettingsPage() {
 
       {/* More */}
       <section className="mb-8">
-        <p className="text-[11px] font-medium text-zinc-500 uppercase tracking-widest mb-3">More</p>
+        <p className="text-[11px] font-medium text-zinc-400 uppercase tracking-widest mb-3">More</p>
         <div className="space-y-2">
-          <button onClick={() => router.push('/completed')} className="w-full text-left p-3 rounded-xl border border-zinc-800 bg-zinc-900/60 text-sm text-zinc-300 hover:text-zinc-100 transition-colors">
+          <button onClick={() => router.push('/completed')} className="w-full text-left p-3 rounded-xl border border-zinc-700 bg-zinc-800 text-sm text-zinc-300 hover:text-zinc-100 transition-colors">
             Completed items →
           </button>
-          <button className="w-full text-left p-3 rounded-xl border border-zinc-800 bg-zinc-900/60 text-sm text-zinc-300 hover:text-zinc-100 transition-colors">
+          <button className="w-full text-left p-3 rounded-xl border border-zinc-700 bg-zinc-800 text-sm text-zinc-300 hover:text-zinc-100 transition-colors">
             Install iOS Shortcut →
           </button>
         </div>
