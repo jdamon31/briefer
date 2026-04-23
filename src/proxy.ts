@@ -25,11 +25,12 @@ export async function proxy(req: NextRequest) {
   if (pathname.startsWith('/api/cron')) return res
 
   const isAuth = pathname.startsWith('/auth')
+  const isOnboarding = pathname.startsWith('/onboarding')
   const isPublic = pathname === '/' || isAuth
 
   try {
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user && !isPublic) {
+    if (!user && !isPublic && !isOnboarding) {
       return NextResponse.redirect(new URL('/auth', req.url))
     }
     if (user && isAuth) {
