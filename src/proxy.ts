@@ -19,7 +19,6 @@ export async function proxy(req: NextRequest) {
     }
   )
 
-  const { data: { user } } = await supabase.auth.getUser()
   const { pathname } = req.nextUrl
 
   // Cron routes use Bearer auth, not session auth
@@ -28,11 +27,20 @@ export async function proxy(req: NextRequest) {
   const isAuth = pathname.startsWith('/auth')
   const isPublic = pathname === '/' || isAuth
 
-  if (!user && !isPublic) {
-    return NextResponse.redirect(new URL('/auth', req.url))
-  }
-  if (user && isAuth) {
-    return NextResponse.redirect(new URL('/today', req.url))
+  try {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user && !isPublic) {
+      return NextResponse.redirect(new URL('/auth', req.url))
+    }
+    if (user && isAuth) {
+      return NextResponse.redirect(new URL('/today', req.url))
+    }
+  } catch (err) {
+    console.error('[proxy] Supabase auth error:', err)
+    // On auth failure, allow public routes through and redirect protected routes to /auth
+    if (!isPublic) {
+      return NextResponse.redirect(new URL('/auth', req.url))
+    }
   }
 
   return res
