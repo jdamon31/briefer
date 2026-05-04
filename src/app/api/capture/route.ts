@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
     const itemType = result.type === 'unclear' ? 'task' : result.type
     const status = result.datetime ? 'active' : 'inbox'
 
-    const { data: updated } = await supabase.from('items').update({
+    const classifiedFields = {
       type: itemType,
       title: result.title,
       notes: result.notes,
@@ -51,7 +51,14 @@ export async function POST(req: NextRequest) {
       location: result.location,
       classifier_confidence: result.classifier_confidence,
       needs_review: result.needs_review,
-    }).eq('id', placeholder.id).select().single()
+    }
+
+    const { data: updated, error: updateErr } = await supabase.from('items').update(classifiedFields)
+      .eq('id', placeholder.id).select().single()
+
+    if (updateErr) console.error('Supabase update failed:', updateErr)
+
+    const item = updated ?? { ...placeholder, ...classifiedFields }
 
     // Push to GCal if it's an event
     if (updated && itemType === 'event' && result.datetime) {
@@ -73,7 +80,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    return NextResponse.json({ item: updated || placeholder })
+    return NextResponse.json({ item: updated ?? item })
   } catch (err) {
     console.error('Classifier failed:', err)
     // Return the placeholder — the item is saved, just not classified

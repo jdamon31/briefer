@@ -37,12 +37,19 @@ export default function CompletedPage() {
   useEffect(() => { load() }, [load])
 
   async function handleComplete(id: string) {
-    // Un-complete
+    const item = items.find(i => i.id === id)
+    if (!item) return
     setItems(prev => prev.filter(i => i.id !== id))
+    const updates: Record<string, unknown> = { status: 'active' }
+    if (!item.due_at) {
+      const today = new Date()
+      today.setHours(9, 0, 0, 0)
+      updates.due_at = today.toISOString()
+    }
     await fetch(`/api/items/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: 'active' }),
+      body: JSON.stringify(updates),
     })
     toast('Restored to Today')
   }
@@ -61,7 +68,7 @@ export default function CompletedPage() {
   const groupOrder = ['Today', 'Yesterday', 'This week', ...Object.keys(groups).filter(k => !['Today', 'Yesterday', 'This week'].includes(k))]
 
   return (
-    <main className="px-4 pt-12 pb-8 max-w-lg">
+    <main className="px-4 pt-4 pb-8 max-w-lg">
       <div className="flex items-center gap-3 mb-6">
         <button onClick={() => router.back()} className="text-zinc-500 hover:text-zinc-100 transition-colors">
           <ChevronLeft size={20} />

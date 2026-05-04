@@ -37,6 +37,8 @@ export interface Item {
   created_at: string
   updated_at: string
   completed_at: string | null
+  // 'daily' | 'weekly:N' (N=1-7 ISO day) | 'monthly:D' (D=1-28) | null
+  recurrence: string | null
 }
 
 export interface ClassifierResult {
@@ -77,4 +79,5 @@ export interface User {
   display_name: string | null
   timezone: string
   email?: string
+  last_active_at: string | null
 }

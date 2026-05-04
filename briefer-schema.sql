@@ -124,3 +124,7 @@ end;
 $$;
 create trigger on_auth_user_created after insert on auth.users
   for each row execute function public.handle_new_user();
+
+-- v2 migrations (run in Supabase SQL editor)
+alter table public.users add column if not exists last_active_at timestamptz;
+alter table public.items add column if not exists recurrence text;

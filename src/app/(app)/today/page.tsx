@@ -1,15 +1,21 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
 import { format } from 'date-fns'
+import { ChevronDown, ChevronRight } from 'lucide-react'
 import { toast } from 'sonner'
 import { Item } from '@/types'
 import { ItemCard } from '@/components/item/item-card'
 import { CaptureBar } from '@/components/layout/capture-bar'
+import { DailyBriefCard } from '@/components/item/DailyBriefCard'
+import { OverdueTriage } from '@/components/item/OverdueTriage'
 
 export default function TodayPage() {
   const [items, setItems] = useState<Item[]>([])
   const [processingIds, setProcessingIds] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
+  const [showTodo, setShowTodo] = useState(true)
+  const [showDone, setShowDone] = useState(false)
+  const [showTriage, setShowTriage] = useState(false)
 
   const load = useCallback(async () => {
     const res = await fetch('/api/items?filter=today')
@@ -20,7 +26,7 @@ export default function TodayPage() {
 
   useEffect(() => { load() }, [load])
 
-  async function handleCapture(rawInput: string, manual = false) {
+  async function handleCapture(rawInput: string) {
     const tempId = `temp-${Date.now()}`
     const placeholder: Item = {
       id: tempId,
@@ -44,6 +50,7 @@ export default function TodayPage() {
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       completed_at: null,
+      recurrence: null,
     }
 
     setItems(prev => [placeholder, ...prev])
@@ -93,18 +100,20 @@ export default function TodayPage() {
   }
 
   const overdue = items.filter(i => i.due_at && new Date(i.due_at) < new Date(new Date().setHours(0,0,0,0)) && i.status !== 'done')
-  const today = items.filter(i => !overdue.includes(i) && i.status !== 'done')
+  const todo = items.filter(i => !overdue.includes(i) && i.status !== 'done')
   const done = items.filter(i => i.status === 'done')
 
   return (
     <>
-      <main className="px-4 pt-12 pb-4">
-        <div className="mb-6">
+      <main className="px-4 pt-4 pb-4">
+        <div className="mb-4">
           <p className="text-xs text-zinc-500 font-medium uppercase tracking-widest">
             {format(new Date(), 'EEEE, MMMM d')}
           </p>
           <h1 className="text-2xl font-semibold mt-1">Today</h1>
         </div>
+
+        <DailyBriefCard />
 
         {loading && (
           <div className="space-y-2">
@@ -113,44 +122,76 @@ export default function TodayPage() {
         )}
 
         {!loading && (
-          <div className="space-y-6">
-            {overdue.length > 0 && (
-              <section>
-                <p className="text-[11px] font-medium text-red-400 uppercase tracking-widest mb-2">Overdue</p>
+          <div className="space-y-4">
+            {/* To Do section */}
+            <section>
+              <button
+                onClick={() => setShowTodo(v => !v)}
+                className="flex items-center gap-1.5 mb-2 w-full text-left"
+              >
+                {showTodo
+                  ? <ChevronDown size={13} className="text-zinc-400" />
+                  : <ChevronRight size={13} className="text-zinc-400" />
+                }
+                <p className="text-[11px] font-semibold text-zinc-400 uppercase tracking-widest">
+                  To Do{todo.length + overdue.length > 0 ? ` · ${todo.length + overdue.length}` : ''}
+                </p>
+              </button>
+              {showTodo && (
                 <div className="space-y-2">
+                  {overdue.length >= 3 && (
+                    <button
+                      onClick={() => setShowTriage(true)}
+                      className="w-full mb-1 py-2.5 px-4 rounded-xl border border-red-500/30 bg-red-500/10 text-sm font-semibold text-red-300 hover:bg-red-500/15 transition-colors"
+                    >
+                      Triage {overdue.length} overdue items
+                    </button>
+                  )}
                   {overdue.map(item => (
+                    <div key={item.id}>
+                      <p className="text-[10px] font-medium text-red-400 uppercase tracking-widest mb-1 ml-1">Overdue</p>
+                      <ItemCard item={item} processing={processingIds.has(item.id)}
+                        onComplete={handleComplete} onUpdate={handleUpdate} onDelete={handleDelete} />
+                    </div>
+                  ))}
+                  {todo.map(item => (
                     <ItemCard key={item.id} item={item} processing={processingIds.has(item.id)}
                       onComplete={handleComplete} onUpdate={handleUpdate} onDelete={handleDelete} />
                   ))}
+                  {todo.length === 0 && overdue.length === 0 && (
+                    <p className="text-sm text-zinc-500 py-3 pl-1">All done for today.</p>
+                  )}
                 </div>
-              </section>
-            )}
+              )}
+            </section>
 
-            {today.length > 0 && (
-              <section>
-                {overdue.length > 0 && <p className="text-[11px] font-medium text-zinc-400 uppercase tracking-widest mb-2">Up next</p>}
-                <div className="space-y-2">
-                  {today.map(item => (
-                    <ItemCard key={item.id} item={item} processing={processingIds.has(item.id)}
-                      onComplete={handleComplete} onUpdate={handleUpdate} onDelete={handleDelete} />
-                  ))}
-                </div>
-              </section>
-            )}
-
+            {/* Done section */}
             {done.length > 0 && (
               <section>
-                <p className="text-[11px] font-medium text-zinc-400 uppercase tracking-widest mb-2">Done</p>
-                <div className="space-y-2">
-                  {done.map(item => (
-                    <ItemCard key={item.id} item={item} processing={false}
-                      onComplete={handleComplete} onUpdate={handleUpdate} onDelete={handleDelete} />
-                  ))}
-                </div>
+                <button
+                  onClick={() => setShowDone(v => !v)}
+                  className="flex items-center gap-1.5 mb-2 w-full text-left"
+                >
+                  {showDone
+                    ? <ChevronDown size={13} className="text-zinc-500" />
+                    : <ChevronRight size={13} className="text-zinc-500" />
+                  }
+                  <p className="text-[11px] font-semibold text-zinc-500 uppercase tracking-widest">
+                    Completed · {done.length}
+                  </p>
+                </button>
+                {showDone && (
+                  <div className="space-y-2">
+                    {done.map(item => (
+                      <ItemCard key={item.id} item={item} processing={false}
+                        onComplete={handleComplete} onUpdate={handleUpdate} onDelete={handleDelete} />
+                    ))}
+                  </div>
+                )}
               </section>
             )}
 
-            {!loading && items.length === 0 && (
+            {items.length === 0 && (
               <div className="text-center py-16 text-zinc-400">
                 <p className="text-sm">Nothing on the list.</p>
                 <p className="text-xs mt-1">Capture something below.</p>
@@ -160,6 +201,13 @@ export default function TodayPage() {
         )}
       </main>
       <CaptureBar onCapture={handleCapture} />
+      <OverdueTriage
+        items={overdue}
+        open={showTriage}
+        onClose={() => setShowTriage(false)}
+        onUpdate={handleUpdate}
+        onDelete={handleDelete}
+      />
     </>
   )
 }

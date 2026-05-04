@@ -1,10 +1,10 @@
 'use client'
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import { useDrag } from '@use-gesture/react'
 import { format, isToday, isTomorrow, isPast, addDays, nextSaturday, nextMonday } from 'date-fns'
-import { CheckCircle2, Circle, HelpCircle, Calendar } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { Item, ItemTag, TAG_COLORS } from '@/types'
+import { CheckCircle2, Circle, HelpCircle, Calendar, Trash2, ChevronDown, ChevronRight, Repeat2 } from 'lucide-react'
+import { cn, recurrenceLabel } from '@/lib/utils'
+import { Item, ItemTag } from '@/types'
 import { DatePickerPopover } from './date-picker-popover'
 import { TagPickerPopover } from './tag-picker-popover'
 
@@ -33,6 +33,49 @@ function getBumpDates() {
   const nextWeek = nextMonday(now)
   nextWeek.setHours(9, 0, 0, 0)
   return { tomorrow, weekend, nextWeek }
+}
+
+function NotesSection({ notes, onSave }: { notes: string; onSave: (n: string) => void }) {
+  const [expanded, setExpanded] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState(notes)
+
+  function commit() {
+    setEditing(false)
+    if (draft.trim() !== notes) onSave(draft.trim())
+  }
+
+  return (
+    <div className="mt-1.5">
+      <button
+        onClick={() => setExpanded(v => !v)}
+        className="flex items-center gap-1 text-[10px] text-zinc-500 hover:text-zinc-400 transition-colors"
+      >
+        {expanded ? <ChevronDown size={10} /> : <ChevronRight size={10} />}
+        <span className="truncate max-w-[200px]">{expanded ? 'Notes' : notes}</span>
+      </button>
+      {expanded && (
+        editing ? (
+          <textarea
+            autoFocus
+            value={draft}
+            onChange={e => setDraft(e.target.value)}
+            onBlur={commit}
+            onKeyDown={e => { if (e.key === 'Escape') { setEditing(false); setDraft(notes) } }}
+            rows={2}
+            className="mt-1 w-full bg-zinc-700/50 text-xs text-zinc-300 rounded-lg px-2 py-1.5 outline-none border border-zinc-600 resize-none"
+          />
+        ) : (
+          <p
+            onClick={() => setEditing(true)}
+            className="mt-1 text-xs text-zinc-400 cursor-text leading-relaxed"
+          >
+            {notes}
+          </p>
+        )
+      )}
+    </div>
+  )
 }
 
 export function ItemCard({ item, processing, onComplete, onUpdate, onDelete }: ItemCardProps) {
@@ -103,7 +146,7 @@ export function ItemCard({ item, processing, onComplete, onUpdate, onDelete }: I
             'group flex items-start gap-3 px-4 py-3.5 rounded-xl border transition-colors',
             flashing === 'complete' && 'bg-green-500/20 border-green-500/40',
             isDone
-              ? 'opacity-50 border-zinc-700 bg-zinc-800/40'
+              ? 'opacity-70 border-zinc-700 bg-zinc-800/50'
               : !flashing ? 'border-zinc-700 bg-zinc-800 hover:border-zinc-600' : ''
           )}
         >
@@ -134,7 +177,7 @@ export function ItemCard({ item, processing, onComplete, onUpdate, onDelete }: I
                 onClick={() => { setEditingTitle(true); setTitleDraft(item.title) }}
                 className={cn(
                   'text-sm cursor-text leading-snug',
-                  isDone ? 'line-through text-zinc-500' : 'text-zinc-100',
+                  isDone ? 'line-through text-zinc-400' : 'text-zinc-100',
                   processing && 'text-zinc-400'
                 )}
               >
@@ -153,6 +196,8 @@ export function ItemCard({ item, processing, onComplete, onUpdate, onDelete }: I
                     due_at: iso,
                     status: iso ? 'active' : 'inbox',
                   })}
+                  recurrence={item.recurrence}
+                  onRecurrenceChange={(r) => onUpdate(item.id, { recurrence: r })}
                 />
 
                 <button
@@ -168,7 +213,22 @@ export function ItemCard({ item, processing, onComplete, onUpdate, onDelete }: I
                   currentTag={item.tags[0] as ItemTag | undefined}
                   onSelect={(tag) => onUpdate(item.id, { tags: [tag] })}
                 />
+
+                {item.recurrence && (
+                  <span className="flex items-center gap-1 text-[10px] text-blue-400 px-2 py-0.5 rounded-full border border-blue-500/20 bg-blue-500/10">
+                    <Repeat2 size={9} />
+                    {recurrenceLabel(item.recurrence)}
+                  </span>
+                )}
               </div>
+            )}
+
+            {/* Notes */}
+            {!processing && item.notes && (
+              <NotesSection
+                notes={item.notes}
+                onSave={(n) => onUpdate(item.id, { notes: n })}
+              />
             )}
 
             {processing && (
@@ -196,12 +256,27 @@ export function ItemCard({ item, processing, onComplete, onUpdate, onDelete }: I
               <span className="text-zinc-500 text-xs">{format(date, 'EEE, MMM d')}</span>
             </button>
           ))}
-          <button
-            onClick={() => setShowBump(false)}
-            className="w-full text-center pt-1 text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
-          >
-            Cancel
-          </button>
+          <DatePickerPopover
+            dueAt={item.due_at}
+            isOverdue={false}
+            label="Pick date…"
+            onConfirm={(iso) => { if (iso) { handleBump(new Date(iso)); setShowBump(false) } }}
+            triggerClassName="w-full text-left px-3 py-2 rounded-lg text-sm text-zinc-400 hover:bg-zinc-700 hover:text-zinc-200 transition-colors"
+          />
+          <div className="flex gap-2 pt-1">
+            <button
+              onClick={() => { setShowBump(false); onDelete(item.id) }}
+              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs text-red-400 hover:bg-red-500/10 transition-colors"
+            >
+              <Trash2 size={12} /> Delete
+            </button>
+            <button
+              onClick={() => setShowBump(false)}
+              className="flex-1 text-center px-3 py-2 rounded-lg text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
         </div>
       )}
     </>

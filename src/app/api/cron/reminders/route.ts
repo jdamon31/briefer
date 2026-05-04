@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
 
   const { data: users } = await db
     .from('users')
-    .select('id, display_name, timezone, user_settings!inner(reminders_enabled, reminder_times, morning_brief_time, morning_brief_enabled)')
+    .select('id, display_name, timezone, last_active_at, user_settings!inner(reminders_enabled, reminder_times, morning_brief_time, morning_brief_enabled)')
 
   const results: string[] = []
 
@@ -85,6 +85,9 @@ export async function POST(req: NextRequest) {
     if (!dueToday?.length && !overdue?.length) continue
     // Quiet: morning brief sent in last 2h
     if (recentLog?.length) continue
+    // Quiet: user was active in the last 30 minutes
+    const thirtyMinAgo = new Date(now.getTime() - 30 * 60000)
+    if (user.last_active_at && new Date((user as any).last_active_at) > thirtyMinAgo) continue
 
     const userEmail = authUser.user?.email
     if (!userEmail) continue

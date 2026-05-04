@@ -7,6 +7,9 @@ export async function GET(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+  // Fire-and-forget — don't slow down item fetches
+  supabase.from('users').update({ last_active_at: new Date().toISOString() }).eq('id', user.id).then(() => {})
+
   const { searchParams } = new URL(req.url)
   const filter = searchParams.get('filter') // today | inbox | completed | upcoming
   const from = searchParams.get('from')

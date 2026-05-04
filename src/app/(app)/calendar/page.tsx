@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
 import { format, startOfWeek, addDays, isSameDay, startOfDay, endOfDay } from 'date-fns'
-import { ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ChevronDown, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
 import { Item } from '@/types'
 import { ItemCard } from '@/components/item/item-card'
@@ -13,6 +13,8 @@ export default function CalendarPage() {
   const [weekStart, setWeekStart] = useState(startOfWeek(new Date(), { weekStartsOn: 1 }))
   const [items, setItems] = useState<Item[]>([])
   const [syncing, setSyncing] = useState(false)
+  const [showTodo, setShowTodo] = useState(true)
+  const [showDone, setShowDone] = useState(false)
 
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
 
@@ -27,6 +29,8 @@ export default function CalendarPage() {
   useEffect(() => { load() }, [load])
 
   const dayItems = items.filter(i => i.due_at && isSameDay(new Date(i.due_at), selectedDate))
+  const dayTodo = dayItems.filter(i => i.status !== 'done')
+  const dayDone = dayItems.filter(i => i.status === 'done')
 
   async function handleSync() {
     setSyncing(true)
@@ -71,7 +75,7 @@ export default function CalendarPage() {
 
   return (
     <>
-      <main className="px-4 pt-12 pb-4">
+      <main className="px-4 pt-4 pb-4">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-2xl font-semibold">Calendar</h1>
           <button
@@ -122,21 +126,63 @@ export default function CalendarPage() {
         </div>
 
         {/* Items for selected day */}
-        <div>
-          <p className="text-[11px] font-medium text-zinc-400 uppercase tracking-widest mb-3">
+        <div className="space-y-4">
+          <p className="text-[11px] font-medium text-zinc-400 uppercase tracking-widest">
             {format(selectedDate, 'EEEE, MMMM d')}
           </p>
-          {dayItems.length === 0 ? (
-            <div className="text-center py-12 text-zinc-400">
-              <p className="text-sm">Nothing scheduled.</p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {dayItems.map(item => (
-                <ItemCard key={item.id} item={item}
-                  onComplete={handleComplete} onUpdate={handleUpdate} onDelete={handleDelete} />
-              ))}
-            </div>
+
+          {/* To Do */}
+          <section>
+            <button
+              onClick={() => setShowTodo(v => !v)}
+              className="flex items-center gap-1.5 mb-2 w-full text-left"
+            >
+              {showTodo
+                ? <ChevronDown size={13} className="text-zinc-400" />
+                : <ChevronRight size={13} className="text-zinc-400" />
+              }
+              <p className="text-[11px] font-semibold text-zinc-400 uppercase tracking-widest">
+                To Do{dayTodo.length > 0 ? ` · ${dayTodo.length}` : ''}
+              </p>
+            </button>
+            {showTodo && (
+              dayTodo.length === 0 ? (
+                <p className="text-sm text-zinc-500 py-2 pl-1">Nothing scheduled.</p>
+              ) : (
+                <div className="space-y-2">
+                  {dayTodo.map(item => (
+                    <ItemCard key={item.id} item={item}
+                      onComplete={handleComplete} onUpdate={handleUpdate} onDelete={handleDelete} />
+                  ))}
+                </div>
+              )
+            )}
+          </section>
+
+          {/* Done */}
+          {dayDone.length > 0 && (
+            <section>
+              <button
+                onClick={() => setShowDone(v => !v)}
+                className="flex items-center gap-1.5 mb-2 w-full text-left"
+              >
+                {showDone
+                  ? <ChevronDown size={13} className="text-zinc-500" />
+                  : <ChevronRight size={13} className="text-zinc-500" />
+                }
+                <p className="text-[11px] font-semibold text-zinc-500 uppercase tracking-widest">
+                  Completed · {dayDone.length}
+                </p>
+              </button>
+              {showDone && (
+                <div className="space-y-2">
+                  {dayDone.map(item => (
+                    <ItemCard key={item.id} item={item}
+                      onComplete={handleComplete} onUpdate={handleUpdate} onDelete={handleDelete} />
+                  ))}
+                </div>
+              )}
+            </section>
           )}
         </div>
       </main>

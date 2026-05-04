@@ -1,8 +1,9 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { toast } from 'sonner'
-import { ExternalLink, CheckCircle, AlertCircle } from 'lucide-react'
+import { ExternalLink, CheckCircle, AlertCircle, ChevronRight, X, Plus } from 'lucide-react'
 import { Switch } from '@/components/ui/switch'
 import { createClient } from '@/lib/supabase/client'
 import type { UserSettings, Integration, User } from '@/types'
@@ -13,12 +14,14 @@ export default function SettingsPage() {
   const [settings, setSettings] = useState<UserSettings | null>(null)
   const [integration, setIntegration] = useState<Integration | null>(null)
   const [saving, setSaving] = useState(false)
+  const [reminderTimes, setReminderTimes] = useState<string[]>([])
 
   useEffect(() => {
     fetch('/api/settings').then(r => r.json()).then(d => {
       setUser(d.user)
       setSettings(d.settings)
       setIntegration(d.integration)
+      setReminderTimes(d.settings?.reminder_times ?? [])
     })
   }, [])
 
@@ -39,12 +42,39 @@ export default function SettingsPage() {
     router.push('/auth')
   }
 
+  function addReminderTime() {
+    const next = [...reminderTimes, '09:00']
+    setReminderTimes(next)
+    save({ reminder_times: next })
+  }
+
+  function removeReminderTime(i: number) {
+    const next = reminderTimes.filter((_, idx) => idx !== i)
+    setReminderTimes(next)
+    save({ reminder_times: next })
+  }
+
+  function updateReminderTime(i: number, value: string) {
+    const next = reminderTimes.map((t, idx) => idx === i ? value : t)
+    setReminderTimes(next)
+    save({ reminder_times: next })
+  }
+
+  async function handleInvite() {
+    try {
+      await navigator.clipboard.writeText(process.env.NEXT_PUBLIC_APP_URL || window.location.origin)
+      toast('Link copied to clipboard')
+    } catch {
+      toast('Copy this link: ' + (process.env.NEXT_PUBLIC_APP_URL || window.location.origin))
+    }
+  }
+
   if (!settings || !user) {
-    return <div className="px-4 pt-12"><div className="space-y-4">{[1,2,3,4].map(i => <div key={i} className="h-16 rounded-xl bg-zinc-800 border border-zinc-700 animate-pulse" />)}</div></div>
+    return <div className="px-4 pt-4"><div className="space-y-4">{[1,2,3,4].map(i => <div key={i} className="h-16 rounded-xl bg-zinc-800 border border-zinc-700 animate-pulse" />)}</div></div>
   }
 
   return (
-    <main className="px-4 pt-12 pb-8 max-w-lg">
+    <main className="px-4 pt-4 pb-8 max-w-lg">
       <h1 className="text-2xl font-semibold mb-6">Settings</h1>
 
       {/* Profile */}
@@ -99,7 +129,10 @@ export default function SettingsPage() {
         <p className="text-[11px] font-medium text-zinc-400 uppercase tracking-widest mb-3">Reminders</p>
         <div className="space-y-3">
           <div className="flex items-center justify-between p-3 rounded-xl border border-zinc-700 bg-zinc-800">
-            <span className="text-sm text-zinc-100">Enable reminders</span>
+            <div>
+              <span className="text-sm text-zinc-100">Enable reminders</span>
+              <p className="text-xs text-zinc-500 mt-0.5">Email nudges throughout the day</p>
+            </div>
             <Switch
               checked={settings.reminders_enabled}
               onCheckedChange={v => {
@@ -108,6 +141,39 @@ export default function SettingsPage() {
               }}
             />
           </div>
+
+          {settings.reminders_enabled && (
+            <div className="p-3 rounded-xl border border-zinc-700 bg-zinc-800 space-y-2">
+              <p className="text-xs text-zinc-400 font-medium">Send times</p>
+              {reminderTimes.map((t, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <input
+                    type="time"
+                    value={t.slice(0, 5)}
+                    onChange={e => updateReminderTime(i, e.target.value)}
+                    className="flex-1 text-sm bg-zinc-700 text-zinc-100 outline-none rounded-lg px-3 py-2 border border-zinc-600"
+                  />
+                  <button
+                    onClick={() => removeReminderTime(i)}
+                    className="p-1.5 text-zinc-500 hover:text-red-400 transition-colors"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ))}
+              {reminderTimes.length < 5 && (
+                <button
+                  onClick={addReminderTime}
+                  className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-zinc-100 transition-colors py-1"
+                >
+                  <Plus size={12} /> Add time
+                </button>
+              )}
+              {reminderTimes.length === 0 && (
+                <p className="text-xs text-zinc-500">No reminder times set — add at least one.</p>
+              )}
+            </div>
+          )}
         </div>
       </section>
 
@@ -145,8 +211,18 @@ export default function SettingsPage() {
       <section className="mb-8">
         <p className="text-[11px] font-medium text-zinc-400 uppercase tracking-widest mb-3">More</p>
         <div className="space-y-2">
-          <button onClick={() => router.push('/completed')} className="w-full text-left p-3 rounded-xl border border-zinc-700 bg-zinc-800 text-sm text-zinc-300 hover:text-zinc-100 transition-colors">
-            Completed items →
+          <Link
+            href="/completed"
+            className="w-full flex items-center justify-between p-3 rounded-xl border border-zinc-700 bg-zinc-800 text-sm text-zinc-300 hover:text-zinc-100 transition-colors"
+          >
+            Completed items
+            <ChevronRight size={14} className="text-zinc-500" />
+          </Link>
+          <button
+            onClick={handleInvite}
+            className="w-full text-left p-3 rounded-xl border border-zinc-700 bg-zinc-800 text-sm text-zinc-300 hover:text-zinc-100 transition-colors"
+          >
+            Invite a friend →
           </button>
           <button className="w-full text-left p-3 rounded-xl border border-zinc-700 bg-zinc-800 text-sm text-zinc-300 hover:text-zinc-100 transition-colors">
             Install iOS Shortcut →
