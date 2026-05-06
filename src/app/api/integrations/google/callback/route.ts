@@ -10,10 +10,9 @@ export async function GET(req: NextRequest) {
 
   const { searchParams } = new URL(req.url)
   const code = searchParams.get('code')
-  const state = searchParams.get('state')
-  const storedState = req.cookies.get('gcal_oauth_state')?.value
+  const userId = searchParams.get('state')
 
-  if (!code || !state || state !== storedState) {
+  if (!code || !userId) {
     return NextResponse.redirect(new URL('/settings?error=gcal_auth_failed', req.url))
   }
 
@@ -63,9 +62,7 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    const response = NextResponse.redirect(new URL('/settings?connected=gcal', req.url))
-    response.cookies.delete('gcal_oauth_state')
-    return response
+    return NextResponse.redirect(new URL('/settings?connected=gcal', req.url))
   } catch (err) {
     console.error('GCal OAuth callback failed:', err)
     return NextResponse.redirect(new URL('/settings?error=gcal_auth_failed', req.url))
