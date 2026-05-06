@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { google } from 'googleapis'
-import { syncFromGCal } from '@/lib/gcal'
 
 function getOAuthClient() {
   const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL}/api/integrations/google/callback`
@@ -36,9 +35,6 @@ export async function GET(req: NextRequest) {
       connected_at: new Date().toISOString(),
       broken: false,
     }, { onConflict: 'user_id,provider' })
-
-    // Backfill in the background — don't await so the redirect is instant
-    syncFromGCal(userId, 14, 30).catch(() => {})
 
     return NextResponse.redirect(new URL('/settings?connected=gcal', req.url))
   } catch (err) {

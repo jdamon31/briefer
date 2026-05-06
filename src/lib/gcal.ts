@@ -163,10 +163,5 @@ export async function syncFromGCal(userId: string, daysForward = 14, daysBack = 
     }).eq('id', auth.integrationId)
   } catch (err: unknown) {
     console.error('GCal sync failed:', err)
-    // Only mark broken for auth failures — not data/network errors
-    const status = (err as { code?: number; status?: number })?.code ?? (err as { code?: number; status?: number })?.status
-    if (status === 401 || status === 403) {
-      await db.from('integrations').update({ broken: true }).eq('id', auth.integrationId)
-    }
   }
 }
