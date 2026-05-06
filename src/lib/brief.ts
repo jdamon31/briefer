@@ -78,6 +78,21 @@ export async function generateInAppBrief(input: InAppBriefInput): Promise<string
   const timeOfDay = currentHour < 12 ? 'morning' : currentHour < 17 ? 'afternoon' : 'evening'
   const remaining = [...todayEvents, ...todayTasks].filter(i => i.status !== 'done')
 
+  // Nothing to brief about — skip the AI call entirely
+  if (remaining.length === 0 && overdueTasks.length === 0 && completedToday.length === 0) {
+    const emptyMessages = [
+      'Nothing on the list today. A good day to get ahead.',
+      'Clear day. Capture anything on your mind below.',
+      'Nothing scheduled. Use the time well.',
+    ]
+    return emptyMessages[new Date().getDay() % emptyMessages.length]
+  }
+
+  // All done for the day — no need for AI either
+  if (remaining.length === 0 && overdueTasks.length === 0 && completedToday.length > 0) {
+    return `You've wrapped up all ${completedToday.length} task${completedToday.length !== 1 ? 's' : ''} for today. Well done.`
+  }
+
   const contextLines = [
     `Time of day: ${timeOfDay} (${currentHour}:00), ${dayOfWeek}`,
     completedToday.length ? `Already completed today: ${completedToday.map(i => i.title).join(', ')}` : null,
