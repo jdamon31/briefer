@@ -25,11 +25,6 @@ export async function GET(req: NextRequest) {
 
   try {
     const { tokens } = await oauth2.getToken(code)
-    oauth2.setCredentials(tokens)
-
-    const calendar = google.calendar({ version: 'v3', auth: oauth2 })
-    const calList = await calendar.calendarList.list({ minAccessRole: 'writer' })
-    const primary = calList.data.items?.find(c => c.primary) || calList.data.items?.[0]
 
     const db = createServiceClient()
     await db.from('integrations').upsert({
@@ -37,7 +32,7 @@ export async function GET(req: NextRequest) {
       provider: 'google_calendar',
       access_token_encrypted: tokens.access_token!,
       refresh_token_encrypted: tokens.refresh_token ?? null,
-      calendar_id: primary?.id || 'primary',
+      calendar_id: 'primary',
       connected_at: new Date().toISOString(),
       broken: false,
     }, { onConflict: 'user_id,provider' })
