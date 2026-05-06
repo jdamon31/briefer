@@ -1,6 +1,6 @@
 'use client'
-import { useState, useRef } from 'react'
-import { Plus, ArrowUp } from 'lucide-react'
+import { useState, useRef, useEffect, useCallback } from 'react'
+import { Plus, ArrowUp, Mic } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 
@@ -19,10 +19,15 @@ interface CaptureBarProps {
 export function CaptureBar({ onCapture }: CaptureBarProps) {
   const [value, setValue] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [listening, setListening] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const submitRef = useRef<(manual?: boolean) => Promise<void>>(async () => {})
   const placeholder = PLACEHOLDERS[Math.floor(Date.now() / 8000) % PLACEHOLDERS.length]
 
-  async function submit(manual = false) {
+  const hasSpeech = typeof window !== 'undefined' &&
+    ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)
+
+  const submit = useCallback(async (manual = false) => {
     const text = value.trim()
     if (!text) return
     setSubmitting(true)
@@ -36,6 +41,35 @@ export function CaptureBar({ onCapture }: CaptureBarProps) {
       setSubmitting(false)
       inputRef.current?.focus()
     }
+  }, [value, onCapture])
+
+  useEffect(() => {
+    submitRef.current = submit
+  }, [submit])
+
+  function startVoice() {
+    type SRConstructor = new () => {
+      lang: string; interimResults: boolean
+      onstart: (() => void) | null
+      onresult: ((e: { results: { [k: number]: { [k: number]: { transcript: string } } } }) => void) | null
+      onerror: (() => void) | null; onend: (() => void) | null
+      start(): void
+    }
+    const w = window as unknown as { SpeechRecognition?: SRConstructor; webkitSpeechRecognition?: SRConstructor }
+    const SR = w.SpeechRecognition || w.webkitSpeechRecognition
+    if (!SR) return
+    const recognition = new SR()
+    recognition.lang = 'en-US'
+    recognition.interimResults = false
+    recognition.onstart = () => setListening(true)
+    recognition.onresult = (e) => {
+      const transcript = e.results[0][0].transcript
+      setValue(transcript)
+      setTimeout(() => submitRef.current(false), 50)
+    }
+    recognition.onerror = () => setListening(false)
+    recognition.onend = () => setListening(false)
+    recognition.start()
   }
 
   return (
@@ -48,6 +82,23 @@ export function CaptureBar({ onCapture }: CaptureBarProps) {
         >
           <Plus size={18} />
         </button>
+
+        {hasSpeech && (
+          <button
+            onClick={startVoice}
+            disabled={submitting || listening}
+            className={cn(
+              'flex-shrink-0 transition-all rounded-full p-1',
+              listening
+                ? 'text-red-400 animate-pulse bg-red-500/10'
+                : 'text-zinc-400 hover:text-zinc-100'
+            )}
+            title="Voice capture"
+          >
+            <Mic size={16} />
+          </button>
+        )}
+
         <input
           ref={inputRef}
           value={value}

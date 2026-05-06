@@ -1,2 +1,8 @@
-{}
-
+{
+  "crons": [
+    { "path": "/api/cron/morning-brief", "schedule": "0 13 * * *" },
+    { "path": "/api/cron/reminders", "schedule": "0 21 * * *" },
+    { "path": "/api/cron/nudge", "schedule": "0 1 * * *" },
+    { "path": "/api/cron/recurrence", "schedule": "0 6 * * *" }
+  ]
+}

@@ -24,6 +24,9 @@ export async function proxy(req: NextRequest) {
   // Cron routes use Bearer auth, not session auth
   if (pathname.startsWith('/api/cron')) return res
 
+  // Shortcut capture uses its own token auth, no session needed
+  if (pathname.startsWith('/api/shortcut/capture')) return res
+
   const isAuth = pathname.startsWith('/auth')
   const isOnboarding = pathname.startsWith('/onboarding')
   const isPublic = pathname === '/' || isAuth

@@ -6,7 +6,18 @@ import { ItemSource } from '@/types'
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+
+  // Support bearer token auth for Siri Shortcuts / iOS short-cut
+  const authHeader = req.headers.get('authorization')
+  let user: { id: string } | null = null
+  if (authHeader?.startsWith('Bearer ')) {
+    const token = authHeader.slice(7)
+    const { data } = await supabase.auth.getUser(token)
+    user = data.user
+  } else {
+    const { data } = await supabase.auth.getUser()
+    user = data.user
+  }
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await req.json()
@@ -51,6 +62,7 @@ export async function POST(req: NextRequest) {
       location: result.location,
       classifier_confidence: result.classifier_confidence,
       needs_review: result.needs_review,
+      recurrence: result.recurrence ?? null,
     }
 
     const { data: updated, error: updateErr } = await supabase.from('items').update(classifiedFields)

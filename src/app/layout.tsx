@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Geist } from 'next/font/google'
 import './globals.css'
 import { Toaster } from '@/components/ui/sonner'
+import { PushSetup } from '@/components/PushSetup'
 
 const geist = Geist({ subsets: ['latin'] })
 
@@ -24,6 +25,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className="dark">
       <body className={`${geist.className} bg-zinc-900 text-zinc-100 antialiased`}>
         {children}
+        <PushSetup />
         <Toaster theme="dark" position="bottom-center" />
       </body>
     </html>

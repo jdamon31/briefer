@@ -17,7 +17,13 @@ export async function classifyInput(
   userTimezone: string,
   now: Date = new Date()
 ): Promise<ClassifierResult> {
-  const prompt = `Current date/time: ${now.toISOString()} (timezone: ${userTimezone})
+  const localNow = now.toLocaleString('en-US', {
+    timeZone: userTimezone,
+    dateStyle: 'full',
+    timeStyle: 'short',
+  })
+
+  const prompt = `Current date/time: ${localNow} (${userTimezone})
 User's raw input: "${rawInput}"
 
 Classify this and return a JSON object with exactly these fields:
@@ -31,7 +37,8 @@ Classify this and return a JSON object with exactly these fields:
   "location": "string" | null,
   "notes": "original context if relevant" | null,
   "classifier_confidence": 0.0-1.0,
-  "needs_review": false
+  "needs_review": false,
+  "recurrence": "daily" | "weekly:N" | "weekly:N,N,N" | "monthly:D" | null
 }
 
 Rules:
@@ -39,7 +46,10 @@ Rules:
 - For events without explicit duration, use 60 minutes as default
 - "explicit" confidence = input had a specific time; "inferred" = derived from context; "none" = no date at all
 - Tags: pick 1-2 most relevant from: ${ALL_TAGS.join(', ')}
-- If type is "unclear", set classifier_confidence to 0.3 and needs_review to true`
+- If type is "unclear", set classifier_confidence to 0.3 and needs_review to true
+- recurrence: detect repeating patterns. N = ISO weekday (1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat, 7=Sun). D = day of month (1-28).
+  Examples: "every day" → "daily", "every Monday" → "weekly:1", "gym MWF" → "weekly:1,3,5", "monthly on the 15th" → "monthly:15", "every week on Tuesday and Thursday" → "weekly:2,4". If no recurrence, use null.
+- For recurring items, datetime should be the FIRST occurrence only`
 
   const message = await client.messages.create({
     model: 'claude-haiku-4-5-20251001',

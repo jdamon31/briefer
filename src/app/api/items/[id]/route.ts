@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { pushEventToGCal, deleteGCalEvent } from '@/lib/gcal'
-import { getNextDueAt } from '@/lib/utils'
+import { getNextDueAt, streakBroken } from '@/lib/utils'
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const supabase = await createClient()
@@ -37,7 +37,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   // Recurrence: spawn next instance when a recurring item is completed
   if (updates.status === 'done' && current.recurrence) {
-    const nextDue = getNextDueAt(current.recurrence, new Date())
+    const now = new Date()
+    const lastCompleted = current.last_completed_at ? new Date(current.last_completed_at) : null
+    const broken = lastCompleted ? streakBroken(current.recurrence, lastCompleted, now) : false
+    const nextStreak = broken ? 0 : (current.streak || 0) + 1
+    const nextDue = getNextDueAt(current.recurrence, now)
+
     await supabase.from('items').insert({
       user_id: user.id,
       title: current.title,
@@ -50,8 +55,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       due_at: nextDue.toISOString(),
       status: 'active',
       source: current.source,
+      streak: nextStreak,
+      last_completed_at: now.toISOString(),
     })
-    // TODO: push to GCal if type === 'event' and integration connected
+
+    // Record last_completed_at on the finished item too
+    await supabase.from('items').update({ last_completed_at: now.toISOString() }).eq('id', id)
   }
 
   // Handle GCal side effects

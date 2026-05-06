@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { generateMorningBrief, generateFallbackBrief } from '@/lib/brief'
 import { syncFromGCal } from '@/lib/gcal'
+import { sendPush } from '@/lib/push'
 import { Resend } from 'resend'
 import { startOfDay, endOfDay, addDays, format } from 'date-fns'
 import { toZonedTime } from 'date-fns-tz'
@@ -102,6 +103,12 @@ export async function POST(req: NextRequest) {
       subject: brief.subject,
       text: brief.body,
     })
+
+    await sendPush(user.id, {
+      title: brief.subject,
+      body: brief.body.slice(0, 120),
+      url: '/today',
+    }).catch(() => {})
 
     await db.from('reminder_log').insert({
       user_id: user.id,

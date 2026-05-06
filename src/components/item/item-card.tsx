@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import { useDrag } from '@use-gesture/react'
 import { format, isToday, isTomorrow, isPast, addDays, nextSaturday, nextMonday } from 'date-fns'
-import { CheckCircle2, Circle, HelpCircle, Calendar, Trash2, ChevronDown, ChevronRight, Repeat2 } from 'lucide-react'
+import { CheckCircle2, Circle, HelpCircle, Calendar, Trash2, ChevronDown, ChevronRight, Repeat2, Star } from 'lucide-react'
 import { cn, recurrenceLabel } from '@/lib/utils'
 import { Item, ItemTag } from '@/types'
 import { DatePickerPopover } from './date-picker-popover'
@@ -145,6 +145,7 @@ export function ItemCard({ item, processing, onComplete, onUpdate, onDelete }: I
           className={cn(
             'group flex items-start gap-3 px-4 py-3.5 rounded-xl border transition-colors',
             flashing === 'complete' && 'bg-green-500/20 border-green-500/40',
+            item.pinned && !flashing && !isDone && 'border-l-2 border-l-amber-400',
             isDone
               ? 'opacity-70 border-zinc-700 bg-zinc-800/50'
               : !flashing ? 'border-zinc-700 bg-zinc-800 hover:border-zinc-600' : ''
@@ -218,6 +219,9 @@ export function ItemCard({ item, processing, onComplete, onUpdate, onDelete }: I
                   <span className="flex items-center gap-1 text-[10px] text-blue-400 px-2 py-0.5 rounded-full border border-blue-500/20 bg-blue-500/10">
                     <Repeat2 size={9} />
                     {recurrenceLabel(item.recurrence)}
+                    {(item.streak ?? 0) > 1 && (
+                      <span className="text-amber-400 ml-0.5">· {item.streak}</span>
+                    )}
                   </span>
                 )}
               </div>
@@ -235,6 +239,21 @@ export function ItemCard({ item, processing, onComplete, onUpdate, onDelete }: I
               <p className="text-[10px] text-zinc-500 mt-1">Processing…</p>
             )}
           </div>
+
+          {/* Pin button */}
+          {!processing && (
+            <button
+              onClick={e => { e.stopPropagation(); onUpdate(item.id, { pinned: !item.pinned }) }}
+              className={cn(
+                'flex-shrink-0 mt-0.5 transition-all',
+                item.pinned
+                  ? 'text-amber-400 opacity-100'
+                  : 'text-zinc-600 opacity-0 group-hover:opacity-100'
+              )}
+            >
+              <Star size={14} fill={item.pinned ? 'currentColor' : 'none'} />
+            </button>
+          )}
         </div>
       </div>
 

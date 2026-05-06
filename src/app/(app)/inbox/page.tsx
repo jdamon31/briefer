@@ -4,10 +4,12 @@ import { toast } from 'sonner'
 import { Item } from '@/types'
 import { ItemCard } from '@/components/item/item-card'
 import { CaptureBar } from '@/components/layout/capture-bar'
+import { InboxTriage } from '@/components/item/InboxTriage'
 
 export default function InboxPage() {
   const [items, setItems] = useState<Item[]>([])
   const [loading, setLoading] = useState(true)
+  const [showTriage, setShowTriage] = useState(false)
 
   const load = useCallback(async () => {
     const res = await fetch('/api/items?filter=inbox')
@@ -78,7 +80,10 @@ export default function InboxPage() {
         {items.length >= 5 && (
           <div className="mb-4 p-3 rounded-xl border border-zinc-700 bg-zinc-900/60 flex items-center justify-between">
             <p className="text-sm text-zinc-300">Review your inbox?</p>
-            <button className="text-sm text-zinc-100 font-medium hover:text-white transition-colors">
+            <button
+              onClick={() => setShowTriage(true)}
+              className="text-sm text-zinc-100 font-medium hover:text-white transition-colors"
+            >
               Go through {items.length} →
             </button>
           </div>
@@ -105,6 +110,13 @@ export default function InboxPage() {
         </div>
       </main>
       <CaptureBar onCapture={handleCapture} />
+      <InboxTriage
+        items={items}
+        open={showTriage}
+        onClose={() => setShowTriage(false)}
+        onUpdate={handleUpdate}
+        onDelete={handleDelete}
+      />
     </>
   )
 }

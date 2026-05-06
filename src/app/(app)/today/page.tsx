@@ -8,6 +8,8 @@ import { ItemCard } from '@/components/item/item-card'
 import { CaptureBar } from '@/components/layout/capture-bar'
 import { DailyBriefCard } from '@/components/item/DailyBriefCard'
 import { OverdueTriage } from '@/components/item/OverdueTriage'
+import { BrieferChat } from '@/components/item/BrieferChat'
+import { FocusSection } from '@/components/item/FocusSection'
 
 export default function TodayPage() {
   const [items, setItems] = useState<Item[]>([])
@@ -16,6 +18,7 @@ export default function TodayPage() {
   const [showTodo, setShowTodo] = useState(true)
   const [showDone, setShowDone] = useState(false)
   const [showTriage, setShowTriage] = useState(false)
+  const [showChat, setShowChat] = useState(false)
 
   const load = useCallback(async () => {
     const res = await fetch('/api/items?filter=today')
@@ -51,6 +54,9 @@ export default function TodayPage() {
       updated_at: new Date().toISOString(),
       completed_at: null,
       recurrence: null,
+      streak: 0,
+      last_completed_at: null,
+      pinned: false,
     }
 
     setItems(prev => [placeholder, ...prev])
@@ -85,6 +91,13 @@ export default function TodayPage() {
   }
 
   async function handleUpdate(id: string, updates: Partial<Item>) {
+    if (updates.pinned === true) {
+      const currentPinned = items.filter(i => i.pinned && i.id !== id).length
+      if (currentPinned >= 3) {
+        toast('Focus is limited to 3 items — unpin one first')
+        return
+      }
+    }
     setItems(prev => prev.map(i => i.id === id ? { ...i, ...updates } : i))
     await fetch(`/api/items/${id}`, {
       method: 'PATCH',
@@ -99,8 +112,9 @@ export default function TodayPage() {
     toast('Deleted', { action: { label: 'Undo', onClick: load } })
   }
 
-  const overdue = items.filter(i => i.due_at && new Date(i.due_at) < new Date(new Date().setHours(0,0,0,0)) && i.status !== 'done')
-  const todo = items.filter(i => !overdue.includes(i) && i.status !== 'done')
+  const focused = items.filter(i => i.pinned && i.status !== 'done')
+  const overdue = items.filter(i => !i.pinned && i.due_at && new Date(i.due_at) < new Date(new Date().setHours(0,0,0,0)) && i.status !== 'done')
+  const todo = items.filter(i => !i.pinned && !overdue.includes(i) && i.status !== 'done')
   const done = items.filter(i => i.status === 'done')
 
   return (
@@ -115,6 +129,13 @@ export default function TodayPage() {
 
         <DailyBriefCard />
 
+        <button
+          onClick={() => setShowChat(true)}
+          className="mb-4 text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
+        >
+          Ask Briefer →
+        </button>
+
         {loading && (
           <div className="space-y-2">
             {[1,2,3].map(i => <div key={i} className="h-16 rounded-xl bg-zinc-800 border border-zinc-700 animate-pulse" />)}
@@ -123,6 +144,15 @@ export default function TodayPage() {
 
         {!loading && (
           <div className="space-y-4">
+            {/* Focus / MITs section */}
+            <FocusSection
+              items={focused}
+              processingIds={processingIds}
+              onComplete={handleComplete}
+              onUpdate={handleUpdate}
+              onDelete={handleDelete}
+            />
+
             {/* To Do section */}
             <section>
               <button
@@ -208,6 +238,7 @@ export default function TodayPage() {
         onUpdate={handleUpdate}
         onDelete={handleDelete}
       />
+      <BrieferChat open={showChat} onClose={() => setShowChat(false)} />
     </>
   )
 }

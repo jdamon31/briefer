@@ -37,8 +37,16 @@ export interface Item {
   created_at: string
   updated_at: string
   completed_at: string | null
-  // 'daily' | 'weekly:N' (N=1-7 ISO day) | 'monthly:D' (D=1-28) | null
+  // 'daily' | 'weekly:N' (N=1-7 ISO day) | 'weekly:N,N,N' (multi-day) | 'monthly:D' (D=1-28) | null
   recurrence: string | null
+  streak: number
+  last_completed_at: string | null
+  pinned: boolean
+}
+
+export interface ChatMessage {
+  role: 'user' | 'assistant'
+  content: string
 }
 
 export interface ClassifierResult {
@@ -52,6 +60,7 @@ export interface ClassifierResult {
   notes: string | null
   classifier_confidence: number
   needs_review: boolean
+  recurrence: string | null
 }
 
 export interface UserSettings {

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
+import { sendPush } from '@/lib/push'
 import { Resend } from 'resend'
 import { startOfDay, endOfDay, format } from 'date-fns'
 import { toZonedTime } from 'date-fns-tz'
@@ -99,12 +100,19 @@ export async function POST(req: NextRequest) {
       process.env.NEXT_PUBLIC_APP_URL || 'https://briefer.app'
     )
 
+    const count = (dueToday?.length || 0) + (overdue?.length || 0)
     await getResend().emails.send({
       from: process.env.RESEND_FROM_EMAIL!,
       to: userEmail,
-      subject: `Briefer · ${(dueToday?.length || 0) + (overdue?.length || 0)} item${((dueToday?.length || 0) + (overdue?.length || 0)) !== 1 ? 's' : ''} need attention`,
+      subject: `Briefer · ${count} item${count !== 1 ? 's' : ''} need attention`,
       text: body,
     })
+
+    await sendPush(user.id, {
+      title: 'Briefer',
+      body: `${count} item${count !== 1 ? 's' : ''} need attention`,
+      url: '/today',
+    }).catch(() => {})
 
     await db.from('reminder_log').insert({
       user_id: user.id,
