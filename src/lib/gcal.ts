@@ -126,13 +126,18 @@ export async function syncFromGCal(userId: string, daysForward = 14, daysBack = 
         .eq('google_event_id', event.id)
         .single()
 
-      const startAt = event.start?.dateTime || event.start?.date
-      if (!startAt) continue
+      // All-day events use date strings ("2024-05-01") — convert to ISO datetime
+      const rawStart = event.start?.dateTime || event.start?.date
+      const rawEnd = event.end?.dateTime || event.end?.date
+      if (!rawStart) continue
+      const startAt = rawStart.includes('T') ? rawStart : new Date(rawStart + 'T00:00:00').toISOString()
+      const endAt = rawEnd ? (rawEnd.includes('T') ? rawEnd : new Date(rawEnd + 'T00:00:00').toISOString()) : null
 
       if (existing.data) {
         await db.from('items').update({
           title: event.summary || 'Untitled',
           due_at: startAt,
+          end_at: endAt,
           location: event.location || null,
           google_etag: event.etag || null,
           updated_at: new Date().toISOString(),
@@ -143,7 +148,7 @@ export async function syncFromGCal(userId: string, daysForward = 14, daysBack = 
           type: 'event',
           title: event.summary || 'Untitled',
           due_at: startAt,
-          end_at: event.end?.dateTime || null,
+          end_at: endAt,
           location: event.location || null,
           status: 'active',
           google_event_id: event.id,
@@ -156,8 +161,12 @@ export async function syncFromGCal(userId: string, daysForward = 14, daysBack = 
     await db.from('integrations').update({
       last_synced_at: new Date().toISOString(),
     }).eq('id', auth.integrationId)
-  } catch (err) {
+  } catch (err: unknown) {
     console.error('GCal sync failed:', err)
-    await db.from('integrations').update({ broken: true }).eq('id', auth.integrationId)
+    // Only mark broken for auth failures — not data/network errors
+    const status = (err as { code?: number; status?: number })?.code ?? (err as { code?: number; status?: number })?.status
+    if (status === 401 || status === 403) {
+      await db.from('integrations').update({ broken: true }).eq('id', auth.integrationId)
+    }
   }
 }
