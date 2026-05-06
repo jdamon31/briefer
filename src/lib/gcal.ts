@@ -3,10 +3,11 @@ import { Item } from '@/types'
 import { createServiceClient } from './supabase/server'
 
 function getOAuthClient() {
+  const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL}/api/integrations/google/callback`
   return new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,
-    process.env.GOOGLE_REDIRECT_URI
+    redirectUri
   )
 }
 
