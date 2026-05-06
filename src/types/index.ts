@@ -76,7 +76,7 @@ export interface UserSettings {
 export interface Integration {
   id: string
   user_id: string
-  provider: 'google_calendar'
+  provider: 'google_calendar' | 'gmail'
   calendar_id: string | null
   connected_at: string | null
   last_synced_at: string | null

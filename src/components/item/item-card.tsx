@@ -7,6 +7,19 @@ import { cn, recurrenceLabel } from '@/lib/utils'
 import { Item, ItemTag } from '@/types'
 import { DatePickerPopover } from './date-picker-popover'
 import { TagPickerPopover } from './tag-picker-popover'
+import confetti from 'canvas-confetti'
+
+function fireCompletionConfetti() {
+  confetti({
+    particleCount: 45,
+    spread: 55,
+    origin: { x: 0.5, y: 0.75 },
+    colors: ['#a855f7', '#3b82f6', '#22c55e', '#f59e0b', '#ec4899'],
+    scalar: 0.75,
+    gravity: 1.2,
+    ticks: 180,
+  })
+}
 
 interface ItemCardProps {
   item: Item
@@ -106,6 +119,7 @@ export function ItemCard({ item, processing, onComplete, onUpdate, onDelete }: I
     setSwipeX(mx)
     if (last) {
       if (mx > 72) {
+        if (!isDone) fireCompletionConfetti()
         setFlashing('complete')
         setTimeout(() => {
           setFlashing(null)
@@ -153,7 +167,10 @@ export function ItemCard({ item, processing, onComplete, onUpdate, onDelete }: I
         >
           {/* Checkbox */}
           <button
-            onClick={() => onComplete(item.id)}
+            onClick={() => {
+              if (!isDone) fireCompletionConfetti()
+              onComplete(item.id)
+            }}
             className="mt-0.5 flex-shrink-0 text-zinc-500 hover:text-zinc-200 transition-colors"
           >
             {isDone

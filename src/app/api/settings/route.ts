@@ -6,13 +6,14 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const [{ data: settings }, { data: userData }, { data: integration }] = await Promise.all([
+  const [{ data: settings }, { data: userData }, { data: integration }, { data: gmailIntegration }] = await Promise.all([
     supabase.from('user_settings').select('*').eq('user_id', user.id).single(),
     supabase.from('users').select('*').eq('id', user.id).single(),
     supabase.from('integrations').select('id,calendar_id,connected_at,last_synced_at,broken').eq('user_id', user.id).eq('provider', 'google_calendar').single(),
+    supabase.from('integrations').select('id,connected_at,last_synced_at,broken').eq('user_id', user.id).eq('provider', 'gmail').single(),
   ])
 
-  return NextResponse.json({ settings, user: userData, integration: integration || null })
+  return NextResponse.json({ settings, user: userData, integration: integration || null, gmailIntegration: gmailIntegration || null })
 }
 
 export async function PATCH(req: NextRequest) {

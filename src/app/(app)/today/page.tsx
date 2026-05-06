@@ -11,6 +11,40 @@ import { OverdueTriage } from '@/components/item/OverdueTriage'
 import { BrieferChat } from '@/components/item/BrieferChat'
 import { FocusSection } from '@/components/item/FocusSection'
 
+function ProgressRing({ done, total }: { done: number; total: number }) {
+  const r = 15
+  const circumference = 2 * Math.PI * r
+  const progress = total > 0 ? done / total : 0
+  const dashOffset = circumference * (1 - progress)
+  const isComplete = done === total && total > 0
+  const color = isComplete ? '#22c55e' : '#3b82f6'
+
+  return (
+    <div className="flex flex-col items-center gap-0.5">
+      <svg width="38" height="38" viewBox="0 0 38 38">
+        <circle cx="19" cy="19" r={r} fill="none" stroke="#3f3f46" strokeWidth="2.5" />
+        <circle
+          cx="19" cy="19" r={r}
+          fill="none"
+          stroke={color}
+          strokeWidth="2.5"
+          strokeDasharray={circumference}
+          strokeDashoffset={dashOffset}
+          strokeLinecap="round"
+          transform="rotate(-90 19 19)"
+          style={{ transition: 'stroke-dashoffset 0.4s ease, stroke 0.3s ease' }}
+        />
+        <text x="19" y="19" dominantBaseline="middle" textAnchor="middle" fill="#a1a1aa" fontSize="8" fontWeight="600">
+          {done}/{total}
+        </text>
+      </svg>
+      <span className="text-[9px] text-zinc-500 font-medium">
+        {total > 0 ? `${Math.round(progress * 100)}%` : '—'}
+      </span>
+    </div>
+  )
+}
+
 export default function TodayPage() {
   const [items, setItems] = useState<Item[]>([])
   const [processingIds, setProcessingIds] = useState<Set<string>>(new Set())
@@ -120,11 +154,19 @@ export default function TodayPage() {
   return (
     <>
       <main className="px-4 pt-4 pb-4">
-        <div className="mb-4">
-          <p className="text-xs text-zinc-500 font-medium uppercase tracking-widest">
-            {format(new Date(), 'EEEE, MMMM d')}
-          </p>
-          <h1 className="text-2xl font-semibold mt-1">Today</h1>
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <p className="text-xs text-zinc-500 font-medium uppercase tracking-widest">
+              {format(new Date(), 'EEEE, MMMM d')}
+            </p>
+            <h1 className="text-2xl font-semibold mt-1">Today</h1>
+          </div>
+          {!loading && (focused.length + overdue.length + todo.length + done.length) > 0 && (
+            <ProgressRing
+              done={done.length}
+              total={focused.length + overdue.length + todo.length + done.length}
+            />
+          )}
         </div>
 
         <DailyBriefCard />

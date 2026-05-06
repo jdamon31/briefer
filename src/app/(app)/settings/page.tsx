@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { toast } from 'sonner'
-import { ExternalLink, CheckCircle, AlertCircle, ChevronRight, X, Plus, Share, Download, Copy, ChevronDown } from 'lucide-react'
+import { ExternalLink, CheckCircle, AlertCircle, ChevronRight, X, Plus, Share, Download, Copy, ChevronDown, RefreshCw } from 'lucide-react'
 import { Switch } from '@/components/ui/switch'
 import { createClient } from '@/lib/supabase/client'
 import type { UserSettings, Integration, User } from '@/types'
@@ -35,6 +35,8 @@ export default function SettingsPage() {
   const [user, setUser] = useState<User | null>(null)
   const [settings, setSettings] = useState<UserSettings | null>(null)
   const [integration, setIntegration] = useState<Integration | null>(null)
+  const [gmailIntegration, setGmailIntegration] = useState<Integration | null>(null)
+  const [gmailSyncing, setGmailSyncing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [reminderTimes, setReminderTimes] = useState<string[]>([])
   const [installingShortcut, setInstallingShortcut] = useState(false)
@@ -49,6 +51,7 @@ export default function SettingsPage() {
       setUser(d.user)
       setSettings(d.settings)
       setIntegration(d.integration)
+      setGmailIntegration(d.gmailIntegration)
       setReminderTimes(d.settings?.reminder_times ?? [])
     })
   }, [])
@@ -151,6 +154,27 @@ export default function SettingsPage() {
       toast.error('Could not generate shortcut — try again')
       setInstallingShortcut(false)
     }
+  }
+
+  async function gmailSync() {
+    setGmailSyncing(true)
+    try {
+      const res = await fetch('/api/integrations/gmail/sync', { method: 'POST' })
+      const data = await res.json()
+      const count = data.created ?? 0
+      toast(count > 0 ? `${count} new task${count !== 1 ? 's' : ''} added from Gmail` : 'No new action items found')
+      if (count > 0) setGmailIntegration(g => g ? { ...g, last_synced_at: new Date().toISOString() } : g)
+    } catch {
+      toast.error('Gmail sync failed')
+    } finally {
+      setGmailSyncing(false)
+    }
+  }
+
+  async function gmailDisconnect() {
+    await fetch('/api/integrations/gmail/disconnect', { method: 'POST' })
+    setGmailIntegration(null)
+    toast('Gmail disconnected')
   }
 
   async function openManualGuide() {
@@ -381,6 +405,63 @@ export default function SettingsPage() {
                 Connect <ExternalLink size={10} />
               </a>
             </div>
+          )}
+        </div>
+      </section>
+
+      {/* Gmail */}
+      <section className="mb-6">
+        <p className="text-[11px] font-medium text-zinc-400 uppercase tracking-widest mb-3">Gmail</p>
+        <div className="p-3 rounded-xl border border-zinc-700 bg-zinc-800 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              {gmailIntegration
+                ? gmailIntegration.broken
+                  ? <AlertCircle size={16} className="text-red-400" />
+                  : <CheckCircle size={16} className="text-green-400" />
+                : <div className="w-4 h-4 rounded-full border border-zinc-600" />
+              }
+              <span className="text-sm text-zinc-100">
+                {gmailIntegration
+                  ? gmailIntegration.broken ? 'Reconnect required' : 'Connected'
+                  : 'Not connected'}
+              </span>
+            </div>
+            {gmailIntegration ? (
+              <button
+                onClick={gmailDisconnect}
+                className="text-xs text-zinc-400 hover:text-red-400 transition-colors"
+              >
+                Disconnect
+              </button>
+            ) : (
+              <a href="/api/integrations/gmail" className="text-xs text-zinc-100 font-medium hover:text-white flex items-center gap-1 transition-colors">
+                Connect <ExternalLink size={10} />
+              </a>
+            )}
+          </div>
+
+          {gmailIntegration && !gmailIntegration.broken && (
+            <>
+              <p className="text-xs text-zinc-500 leading-relaxed">
+                Briefer scans your inbox for action items and adds them to your Inbox automatically.
+              </p>
+              <div className="flex items-center justify-between">
+                {gmailIntegration.last_synced_at && (
+                  <span className="text-[10px] text-zinc-500">
+                    Last synced {new Date(gmailIntegration.last_synced_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                )}
+                <button
+                  onClick={gmailSync}
+                  disabled={gmailSyncing}
+                  className="flex items-center gap-1 text-xs text-zinc-300 hover:text-zinc-100 transition-colors disabled:opacity-50 ml-auto"
+                >
+                  <RefreshCw size={11} className={gmailSyncing ? 'animate-spin' : ''} />
+                  {gmailSyncing ? 'Syncing…' : 'Sync now'}
+                </button>
+              </div>
+            </>
           )}
         </div>
       </section>
